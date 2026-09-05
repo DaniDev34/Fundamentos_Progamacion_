@@ -35,7 +35,10 @@ La función `imprimir_tabla(tabla)` recorre la matriz y muestra cada fila con lo
 def imprimir_tabla(tabla):
     for fila in tabla:
         print("\t".join(str(numero) for numero in fila))
+        
 ```
+
+## Consultar Producto
 
 ---
 
