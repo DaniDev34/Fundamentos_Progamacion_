@@ -53,7 +53,7 @@ Para garantizar el funcionamiento completo del sistema se definen los siguientes
 3. El sistema debe presentar el menú principal a partir de una **matriz** de filas y columnas, recorriendo la longitud de cada celda para alinear las columnas.
 4. El sistema debe capturar la fecha de operación en formato `dia/mes/año` y almacenarla estrictamente en una **tupla**.
 5. El sistema debe integrar la fecha de la tupla y el nombre del usuario en cada archivo de texto creado o modificado.
-6. El sistema debe contar con cuatro o más **archivos de texto (.txt) de prueba** en la carpeta `datos/` y listarlos en un **diccionario** numerado para su lectura.
+6. El sistema debe contar con cuatro o más **archivos de texto (.txt) de prueba** en la carpeta `datos/` y listarlos en un **diccionario** numerado para su lectura. La carpeta se crea automáticamente en la primera ejecución y se va poblando con las opciones 5 y 6 y con la bitácora de la opción 2, por lo que el inventario se construye siempre en tiempo de ejecución.
 7. El sistema debe permitir leer, crear y anexar información en archivos de texto de forma permanente.
 8. El sistema debe calcular la cotización aplicando descuentos, condonación de instalación, IVA y primer pago, y debe mostrar el desglose completo.
 9. El sistema debe registrar en la bitácora las cotizaciones que el usuario decida guardar.
@@ -159,7 +159,7 @@ El sistema sigue el modelo **Entrada-Proceso-Salida**:
 - `for` con `range` en `pantalla_carga`: recorre los seis pasos del indicador de progreso.
 - `for` con `range` en `ver_catalogo` y `ver_cotizacion`: recorre la longitud de las listas de velocidades y precios.
 - `for` con `range` en `imprimir_menu` y `listar_archivos`: recorren la matriz del menú y el listado ordenado de archivos.
-- `for` con `range` en `vigilar_inactividad`: es el ciclo `for` exigido por la actividad para medir los diez minutos de inactividad, verificados segundo a segundo con `time.sleep(1)`.
+- `for` con `range` en `inactividad`: es el ciclo `for` exigido por la actividad para medir los diez minutos de inactividad, verificados segundo a segundo con `time.sleep(1)`.
 - `for nombre in nombres`: recorre los archivos existentes para numerarlos en el diccionario `disponibles`.
 
 **Otras estructuras:**
@@ -177,7 +177,7 @@ El archivo `cotizacion.py` está organizado en bloques funcionales que separan l
 | Configuración | Constantes, listas del catálogo, acumuladores, `estado`, rutas y parámetros de carga | Centralizar los valores del negocio y los parámetros de la interfaz. |
 | Captura de sesión | `pedir_nombre`, `capturar_fecha`, `fecha_texto` | Identificar al usuario y registrar la fecha en una tupla. |
 | Presentación | `bienvenida`, `pantalla_carga`, `imprimir_menu`, `ver_catalogo` | Generar la salida formal del sistema. |
-| Control de inactividad | `vigilar_inactividad`, `esperar_opcion` | Medir el tiempo sin interacción y suspender el menú. |
+| Control de inactividad | `inactividad`, `esperar_opcion` | Medir el tiempo sin interacción y suspender el menú. |
 | Persistencia | `preparar_carpeta`, `listar_archivos`, `mostrar_archivos`, `leer_archivo`, `crear_archivo`, `anexar_datos`, `escribir_archivo`, `anexar_archivo` | Administrar los archivos de texto de la carpeta `datos/`. |
 | Lógica de negocio | `ver_cotizacion`, `ver_resumen` | Calcular la cotización y acumular los totales de la sesión. |
 | Navegación | `menu_principal`, `main` | Dirigir las opciones del menú y el ciclo de vida del programa. |
@@ -261,10 +261,10 @@ La función `pedir_nombre` solicita la identificación del usuario mediante `inp
 ```python
 def pedir_nombre():
     while True:
-        nombre = input("\nIdentificacion de usuario. Ingresa tu nombre: ").strip()
+        nombre = input("\n Ingresa tu nombre: ").strip()
         if nombre != "":
             return nombre
-        print("Error: el nombre no puede quedar vacio.")
+        print("El nombre no puede quedar vacio.")
 ```
 
 ### 4. Captura estructurada de la fecha en tupla
@@ -286,10 +286,10 @@ def capturar_fecha():
             if dia < 1 or dia > 31 or mes < 1 or mes > 12 or anio < 1900 or anio > 2100:
                 raise ValueError
             fecha = (dia, mes, anio)
-            print("Fecha de operacion registrada en la tupla: fecha =", fecha)
+            print("Fecha de operacion registrada: fecha =", fecha)
             return
         except ValueError:
-            print("Error, la fecha debe tener el formato dia/mes/año, por ejemplo 12/06/2026.")
+            print("La fecha debe tener el formato dia/mes/año, por ejemplo 12/06/2026.")
 ```
 
 ### 5. Formato de la fecha en texto
@@ -314,15 +314,15 @@ La función `bienvenida` arma el encabezado del sistema calculando el borde con 
 
 ```python
 def bienvenida():
-    titulo = "IENTC - SISTEMA DE COTIZACION DE INTERNET EMPRESARIAL"
+    titulo = "IENTC - Sistema de cotización empresarial"
     borde = "=" * len(titulo)
     print("\n" + borde)
     print(titulo)
     print(borde)
-    print("\nEstimado usuario " + usuario + ", le damos la bienvenida al sistema.")
-    print("Su sesion quedo registrada el " + fecha_texto() + " por el area comercial de IENTC.")
-    print("Perfil de atencion: " + usuario.upper() + " | Modulo: Cotizacion | Estatus: Activo")
-    print("Puede consultar el catalogo, generar cotizaciones y administrar sus archivos de texto.")
+    print("\nEstimado usuario " + usuario + ", le damos la bienvenida al sistema IENTC.")
+    print("Su sesion quedo registrada en la fecha" + fecha_texto() + " por el area comercial de IENTC.")
+    print("Perfil: " + usuario.upper() + " | Estatus: Activo")
+    print("Aquí puede consultar el catalogo, generar cotizaciones y administrar sus archivos de texto.")
     print(borde)
 ```
 
@@ -333,7 +333,7 @@ La función `pantalla_carga` es la **función dedicada** exigida por la activida
 ```python
 def pantalla_carga():
     avance = 100 // pasos_carga
-    print("\n>>> Iniciando el sistema IENTC, por favor espere...")
+    print("\n --- Iniciando el sistema, por favor espere...")
     for paso in range(1, pasos_carga + 1):
         print("\rCargando modulos " + "." * paso + " " + str(paso * avance) + "%", end="", flush=True)
         time.sleep(duracion_paso_carga)
@@ -361,10 +361,10 @@ def imprimir_menu():
 
 ### 9. Control de inactividad con ciclo `for`
 
-La función `vigilar_inactividad` es el **control de inactividad del usuario** solicitado con un ciclo `for`. Recorre los `segundos_inactividad` (600) en orden descendente y sale de inmediato si la bandera `actividad` pasa a `True`, es decir, cuando el usuario ya eligió una opción. Cuando el contador llega a un minuto exacto, muestra un aviso; si el ciclo concluye sin interacción, marca `suspendido` en el diccionario `estado`:
+La función `inactividad` es el **control de inactividad del usuario** solicitado con un ciclo `for`. Recorre los `segundos_inactividad` (600) en orden descendente y sale de inmediato (`return`) si la bandera `actividad` pasa a `False`, es decir, cuando el usuario ya eligió una opción. Cuando el contador llega a un minuto exacto, muestra un aviso; si el ciclo concluye sin interacción, marca `suspendido` en el diccionario `estado`:
 
 ```python
-def vigilar_inactividad():
+def inactividad():
     for segundo in range(segundos_inactividad, 0, -1):
         if estado["actividad"] == False:
             return
@@ -378,13 +378,13 @@ def vigilar_inactividad():
 
 ### 10. Integración del control de inactividad con el menú
 
-La función `esperar_opcion` es el puente entre el menú y el hilo de inactividad: marca la sesión como activa, crea un `threading.Thread` con `target=vigilar_inactividad`, lo declara `daemon` para que no bloquee el cierre del programa y lo inicia con `start()`. El `input` queda en el hilo principal, de modo que el reloj de inactividad avanza en paralelo. Al recibir la respuesta, marca `actividad = False` y ejecuta `hilo.join()` para **sincronizar** con el hilo antes de decidir el valor devuelto: si la sesión fue suspendida retorna `"suspendido"`, en caso contrario retorna la opción capturada:
+La función `esperar_opcion` es el puente entre el menú y el hilo de inactividad: marca la sesión como activa, crea un `threading.Thread` con `target=inactividad`, lo declara `daemon` para que no bloquee el cierre del programa y lo inicia con `start()`. El `input` queda en el hilo principal, de modo que el reloj de inactividad avanza en paralelo. Al recibir la respuesta, marca `actividad = False` y ejecuta `hilo.join()` para **sincronizar** con el hilo antes de decidir el valor devuelto: si la sesión fue suspendida retorna `"suspendido"`, en caso contrario retorna la opción capturada:
 
 ```python
 def esperar_opcion():
     estado["actividad"] = True
     estado["suspendido"] = False
-    hilo = threading.Thread(target=vigilar_inactividad)
+    hilo = threading.Thread(target=inactividad)
     hilo.daemon = True
     hilo.start()
     opcion = input("Selecciona una opcion: ")
@@ -430,7 +430,7 @@ def listar_archivos():
                 indice = indice + 1
                 disponibles[indice] = nombre
     except OSError:
-        print("Error: no fue posible revisar los archivos disponibles.")
+        print("No fue posible revisar los archivos disponibles.")
     return disponibles
 ```
 
@@ -468,15 +468,15 @@ def leer_archivo():
         if numero in disponibles:
             nombre_archivo = disponibles[numero]
             break
-        print("Error: '" + seleccion + "' no esta disponible. Revisa el nombre capturado e intenta de nuevo.")
+        print("" + seleccion + "' no esta disponible. Revisa el nombre capturado.")
     try:
         with open(os.path.join(carpeta_datos, nombre_archivo), "r", encoding="utf-8") as archivo:
             contenido = archivo.read()
     except OSError:
-        print("Error: no se pudo leer '" + nombre_archivo + "', revisa que exista en la carpeta de datos.")
+        print("Ni se pudo leer '" + nombre_archivo + "', revisa que exista en la carpeta de datos.")
         return
     except UnicodeDecodeError:
-        print("Error: '" + nombre_archivo + "' contiene caracteres no compatibles con la lectura.")
+        print("El archivo'" + nombre_archivo + "' contiene caracteres no compatibles con la lectura.")
         return
     print("\n--- Contenido de " + nombre_archivo + " ---")
     if contenido.strip() == "":
@@ -508,7 +508,7 @@ def crear_archivo(nombre_archivo, contenido):
         print("Archivo creado correctamente: " + nombre_archivo)
         return True
     except OSError:
-        print("Error: fallo la creacion de '" + nombre_archivo + "', intentalo de nuevo.")
+        print("Falló la creacion de '" + nombre_archivo + "', prueba de nuevo.")
         return False
 ```
 
@@ -525,14 +525,14 @@ def anexar_datos(nombre_archivo, contenido):
         nuevo = os.path.exists(os.path.join(carpeta_datos, nombre_archivo)) == False
         with open(os.path.join(carpeta_datos, nombre_archivo), "a", encoding="utf-8") as archivo:
             if nuevo == True:
-                archivo.write("=== IENTC - Cotizador de Internet ===\n")
+                archivo.write("----- IENTC - Cotizador de Internet -----\n")
             archivo.write("\nFecha de operacion: " + fecha_texto() + "\n")
             archivo.write("Usuario: " + usuario + "\n")
             archivo.write(contenido + "\n")
-        print("Datos anexados correctamente en: " + nombre_archivo)
+        print("Datos anexados en: " + nombre_archivo)
         return True
     except OSError:
-        print("Error: fallo el anexado en '" + nombre_archivo + "', intentalo de nuevo.")
+        print("Falló el anexado en '" + nombre_archivo + "', prueba de nuevo.")
         return False
 ```
 
@@ -610,7 +610,7 @@ Al terminar el detalle en pantalla, la función actualiza los **acumuladores de 
 Por último, si el usuario responde `si`, la cotización se resume en la cadena `detalle` y se persiste en la **bitácora** mediante `anexar_datos`, lo que satisface el requerimiento de archivo de texto generado automáticamente:
 
 ```python
-    registro = input("\nDeseas registrar esta cotizacion en la bitacora? (si/no): ").strip().lower()
+    registro = input("\nDeseas registrar esta cotizacion? (si/no): ").strip().lower()
     if registro == "si":
         detalle = (
             "Cotizacion #" + str(num_cotizaciones)
@@ -693,7 +693,7 @@ def ver_cotizacion():
     total_mensualidades = total_mensualidades + mensualidad
     num_cotizaciones = num_cotizaciones + 1
 
-    registro = input("\nDeseas registrar esta cotizacion en la bitacora? (si/no): ").strip().lower()
+    registro = input("\nDeseas registrar esta cotizacion? (si/no): ").strip().lower()
     if registro == "si":
         detalle = (
             "Cotizacion #" + str(num_cotizaciones)
@@ -735,9 +735,9 @@ def menu_principal():
                 continuar = input("Deseas continuar en el menu? (si/no): ").strip().lower()
                 if continuar == "si" or continuar == "no":
                     break
-                print("Error: responde exactamente 'si' o 'no'.")
+                print("Error, responde exactamente usando 'si' o 'no'.")
             if continuar == "si":
-                print("Sesion reanudada, regresas al menu principal.")
+                print("Sesion reanudada, regresarás al menu principal.")
                 continue
             print("Regresando a la pantalla de inicio del programa.")
             return "inicio"
@@ -783,12 +783,12 @@ Finalmente, el bloque `try/except` a nivel de módulo cumple el requerimiento de
 try:
     main()
 except KeyboardInterrupt:
-    print("\n\nInterrupcion del usuario, el programa se cerro de forma segura.")
+    print("\n\n Iterrupción del usuario, se cerrará el programa.")
 except EOFError:
-    print("\n\nFin de la entrada de datos, el programa se cerro de forma segura.")
+    print("\n\n Fin de la entrada de datos, el programa se cerrará.")
 except Exception as error:
-    print("\nError inesperado en el sistema:", error)
-    print("El programa se cerro de forma segura, revise los archivos e intentelo de nuevo.")
+    print("\nError inesperado:", error)
+    print("El programa se cerrará, revise los archivos e intentelo de nuevo.")
 ```
 
 ---
@@ -803,7 +803,7 @@ except Exception as error:
 | `bienvenida` | Ninguno | `None` | Genera el mensaje formal con el usuario y la fecha. |
 | `pantalla_carga` | Ninguno | `None` | Muestra la barra de progreso de la carga del sistema. |
 | `imprimir_menu` | Ninguno | `None` | Calcula los anchos de columna e imprime la matriz del menú. |
-| `vigilar_inactividad` | Ninguno | `None` | Ciclo `for` que mide los 600 segundos de inactividad. |
+| `inactividad` | Ninguno | `None` | Ciclo `for` que mide los 600 segundos de inactividad. |
 | `esperar_opcion` | Ninguno | `str` | Captura la opción en paralelo al hilo de inactividad. |
 | `ver_catalogo` | Ninguno | `None` | Lista los cuatro planes disponibles. |
 | `preparar_carpeta` | Ninguno | `None` | Crea la carpeta `datos/` si no existe. |
@@ -819,19 +819,24 @@ except Exception as error:
 | `menu_principal` | Ninguno | `str` | Ciclo `while` que dirige las opciones y la reanudación por inactividad. |
 | `main` | Ninguno | `None` | Ciclo de vida de la sesión y punto de entrada al programa. |
 
-## Archivos de texto de prueba
+## Carpeta de datos y archivos de texto
 
-El requerimiento de persistencia exige contar con **cuatro o más archivos `.txt`** creados de antemano. La carpeta `datos/` del repositorio contiene los siguientes archivos, disponibles para lectura desde la opción 4 del menú:
+La persistencia trabaja sobre la carpeta `datos/`, cuya ruta se define en la constante `carpeta_datos`. **La carpeta no forma parte del repositorio**: el sistema la crea automáticamente la primera vez que se necesita, porque las funciones `preparar_carpeta`, `listar_archivos`, `crear_archivo` y `anexar_datos` invocan `os.makedirs` cuando `os.path.isdir` devuelve `False`. Por lo tanto, los archivos `.txt` se producen durante la ejecución, no se entregan con el código.
 
-| Archivo | Contenido |
-| :--- | :--- |
-| `catalogo_planes.txt` | Catálogo oficial de los cuatro planes, costos de instalación, IVA y plazos disponibles. |
-| `contratos_clientes.txt` | Registro histórico de contratos cotizados con plan, plazo, mensualidad y estatus. |
-| `reglas_descuentos.txt` | Reglas de negocio de descuentos, instalación e IVA aplicables a toda cotización. |
-| `tarifas_internacionales.txt` | Tarifas de referencia para enlaces de interconexión internacional. |
-| `cotizaciones_bitacora.txt` | Bitácora generada por el propio sistema al registrar cotizaciones. |
+El inventario de archivos se arma en tiempo de ejecución y está compuesto por los archivos que el propio usuario genera durante la sesión:
 
-Cada archivo generado por el sistema incluye el encabezado `=== IENTC - Cotizador de Internet ===`, el nombre del archivo, la **fecha de operación** obtenida de la tupla y el **usuario** de la sesión, lo que evidencia el requerimiento de integración automática de la fecha estructurada.
+| Origen | Archivo | Contenido |
+| :--- | :--- | :--- |
+| Opción 5 | nombre elegido por el usuario | Archivo nuevo con el contenido capturado, encabezado por los datos de la sesión. |
+| Opción 6 | nombre o índice elegido por el usuario | Datos anexados al final de un archivo existente, sin alterar su contenido previo. |
+| Opción 2 | `cotizaciones_bitacora.txt` | Bitácora que el sistema anexa automáticamente por cada cotización registrada con `si`. |
+
+Una vez que la carpeta contiene archivos `.txt`, la opción 4 los numera mediante el diccionario `disponibles` y permite abrir cualquiera de ellos por nombre o por índice.
+
+Los archivos se escriben en modo `utf-8` y llevan siempre la **fecha de operación** obtenida de la tupla y el **usuario** de la sesión, con dos formatos de encabezado según la operación:
+
+- `crear_archivo` escribe `=== IENTC - Cotizador de Internet ===`, el nombre del archivo, la fecha, el usuario y una línea separadora.
+- `anexar_datos` escribe `----- IENTC - Cotizador de Internet -----` únicamente cuando el archivo se crea en ese momento, y anexa fecha, usuario y contenido en cada bloque.
 
 ## Depuración técnica con PDB
 
@@ -895,10 +900,10 @@ matriz_menu = [
 
 def pedir_nombre():
     while True:
-        nombre = input("\nIdentificacion de usuario. Ingresa tu nombre: ").strip()
+        nombre = input("\n Ingresa tu nombre: ").strip()
         if nombre != "":
             return nombre
-        print("Error: el nombre no puede quedar vacio.")
+        print("El nombre no puede quedar vacio.")
 
 
 def fecha_texto():
@@ -926,28 +931,28 @@ def capturar_fecha():
             if dia < 1 or dia > 31 or mes < 1 or mes > 12 or anio < 1900 or anio > 2100:
                 raise ValueError
             fecha = (dia, mes, anio)
-            print("Fecha de operacion registrada en la tupla: fecha =", fecha)
+            print("Fecha de operacion registrada: fecha =", fecha)
             return
         except ValueError:
-            print("Error, la fecha debe tener el formato dia/mes/año, por ejemplo 12/06/2026.")
+            print("La fecha debe tener el formato dia/mes/año, por ejemplo 12/06/2026.")
 
 
 def bienvenida():
-    titulo = "IENTC - SISTEMA DE COTIZACION DE INTERNET EMPRESARIAL"
+    titulo = "IENTC - Sistema de cotización empresarial"
     borde = "=" * len(titulo)
     print("\n" + borde)
     print(titulo)
     print(borde)
-    print("\nEstimado usuario " + usuario + ", le damos la bienvenida al sistema.")
-    print("Su sesion quedo registrada el " + fecha_texto() + " por el area comercial de IENTC.")
-    print("Perfil de atencion: " + usuario.upper() + " | Modulo: Cotizacion | Estatus: Activo")
-    print("Puede consultar el catalogo, generar cotizaciones y administrar sus archivos de texto.")
+    print("\nEstimado usuario " + usuario + ", le damos la bienvenida al sistema IENTC.")
+    print("Su sesion quedo registrada en la fecha" + fecha_texto() + " por el area comercial de IENTC.")
+    print("Perfil: " + usuario.upper() + " | Estatus: Activo")
+    print("Aquí puede consultar el catalogo, generar cotizaciones y administrar sus archivos de texto.")
     print(borde)
 
 
 def pantalla_carga():
     avance = 100 // pasos_carga
-    print("\n>>> Iniciando el sistema IENTC, por favor espere...")
+    print("\n --- Iniciando el sistema, por favor espere...")
     for paso in range(1, pasos_carga + 1):
         print("\rCargando modulos " + "." * paso + " " + str(paso * avance) + "%", end="", flush=True)
         time.sleep(duracion_paso_carga)
@@ -968,7 +973,7 @@ def imprimir_menu():
     print("-" * (ancho_opcion + ancho_descripcion + 3))
 
 
-def vigilar_inactividad():
+def inactividad():
     for segundo in range(segundos_inactividad, 0, -1):
         if estado["actividad"] == False:
             return
@@ -983,7 +988,7 @@ def vigilar_inactividad():
 def esperar_opcion():
     estado["actividad"] = True
     estado["suspendido"] = False
-    hilo = threading.Thread(target=vigilar_inactividad)
+    hilo = threading.Thread(target=inactividad)
     hilo.daemon = True
     hilo.start()
     opcion = input("Selecciona una opcion: ")
@@ -1016,7 +1021,7 @@ def listar_archivos():
                 indice = indice + 1
                 disponibles[indice] = nombre
     except OSError:
-        print("Error: no fue posible revisar los archivos disponibles.")
+        print("No fue posible revisar los archivos disponibles.")
     return disponibles
 
 
@@ -1046,15 +1051,15 @@ def leer_archivo():
         if numero in disponibles:
             nombre_archivo = disponibles[numero]
             break
-        print("Error: '" + seleccion + "' no esta disponible. Revisa el nombre capturado e intenta de nuevo.")
+        print("" + seleccion + "' no esta disponible. Revisa el nombre capturado.")
     try:
         with open(os.path.join(carpeta_datos, nombre_archivo), "r", encoding="utf-8") as archivo:
             contenido = archivo.read()
     except OSError:
-        print("Error: no se pudo leer '" + nombre_archivo + "', revisa que exista en la carpeta de datos.")
+        print("Ni se pudo leer '" + nombre_archivo + "', revisa que exista en la carpeta de datos.")
         return
     except UnicodeDecodeError:
-        print("Error: '" + nombre_archivo + "' contiene caracteres no compatibles con la lectura.")
+        print("El archivo'" + nombre_archivo + "' contiene caracteres no compatibles con la lectura.")
         return
     print("\n--- Contenido de " + nombre_archivo + " ---")
     if contenido.strip() == "":
@@ -1081,7 +1086,7 @@ def crear_archivo(nombre_archivo, contenido):
         print("Archivo creado correctamente: " + nombre_archivo)
         return True
     except OSError:
-        print("Error: fallo la creacion de '" + nombre_archivo + "', intentalo de nuevo.")
+        print("Falló la creacion de '" + nombre_archivo + "', prueba de nuevo.")
         return False
 
 
@@ -1093,14 +1098,14 @@ def anexar_datos(nombre_archivo, contenido):
         nuevo = os.path.exists(os.path.join(carpeta_datos, nombre_archivo)) == False
         with open(os.path.join(carpeta_datos, nombre_archivo), "a", encoding="utf-8") as archivo:
             if nuevo == True:
-                archivo.write("=== IENTC - Cotizador de Internet ===\n")
+                archivo.write("----- IENTC - Cotizador de Internet -----\n")
             archivo.write("\nFecha de operacion: " + fecha_texto() + "\n")
             archivo.write("Usuario: " + usuario + "\n")
             archivo.write(contenido + "\n")
-        print("Datos anexados correctamente en: " + nombre_archivo)
+        print("Datos anexados en: " + nombre_archivo)
         return True
     except OSError:
-        print("Error: fallo el anexado en '" + nombre_archivo + "', intentalo de nuevo.")
+        print("Falló el anexado en '" + nombre_archivo + "', prueba de nuevo.")
         return False
 
 
@@ -1200,7 +1205,7 @@ def ver_cotizacion():
     total_mensualidades = total_mensualidades + mensualidad
     num_cotizaciones = num_cotizaciones + 1
 
-    registro = input("\nDeseas registrar esta cotizacion en la bitacora? (si/no): ").strip().lower()
+    registro = input("\nDeseas registrar esta cotizacion? (si/no): ").strip().lower()
     if registro == "si":
         detalle = (
             "Cotizacion #" + str(num_cotizaciones)
@@ -1232,9 +1237,9 @@ def menu_principal():
                 continuar = input("Deseas continuar en el menu? (si/no): ").strip().lower()
                 if continuar == "si" or continuar == "no":
                     break
-                print("Error: responde exactamente 'si' o 'no'.")
+                print("Error, responde exactamente usando 'si' o 'no'.")
             if continuar == "si":
-                print("Sesion reanudada, regresas al menu principal.")
+                print("Sesion reanudada, regresarás al menu principal.")
                 continue
             print("Regresando a la pantalla de inicio del programa.")
             return "inicio"
@@ -1272,10 +1277,10 @@ def main():
 try:
     main()
 except KeyboardInterrupt:
-    print("\n\nInterrupcion del usuario, el programa se cerro de forma segura.")
+    print("\n\n Iterrupción del usuario, se cerrará el programa.")
 except EOFError:
-    print("\n\nFin de la entrada de datos, el programa se cerro de forma segura.")
+    print("\n\n Fin de la entrada de datos, el programa se cerrará.")
 except Exception as error:
-    print("\nError inesperado en el sistema:", error)
-    print("El programa se cerro de forma segura, revise los archivos e intentelo de nuevo.")
+    print("\nError inesperado:", error)
+    print("El programa se cerrará, revise los archivos e intentelo de nuevo.")
 ```
